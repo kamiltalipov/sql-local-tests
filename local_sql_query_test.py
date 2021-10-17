@@ -1,64 +1,44 @@
-import pymysql
-from pymysql.cursors import DictCursor
-
-database_name = "AIRTRANS"
+import sqlite3
 
 
-def execute_statement(connection, stmt, commit=False, return_result=False):
-    stmt = stmt.strip()
-    if len(stmt) == 0:
-        return
+def init_airtrans_db(connection, cursor):
+    with open('sql/INIT_DB.sql') as initial_sql_script_fin:
+        init_db_script = initial_sql_script_fin.read().strip()
+        cursor.executescript(init_db_script)
+        connection.commit()
+
+
+def run_query(cursor, sql_query):
+    cursor.execute(sql_query)
+    columns = [description[0] for description in cursor.description]
+    rows = cursor.fetchall()
+    return {
+        'columns': columns,
+        'rows': [list(row) for row in rows]
+    }
+
+
+def test_query():
+    connection = sqlite3.connect(':memory:')
     cursor = connection.cursor()
-    cursor.execute(stmt)
-    if commit:
-        connection.commit()
-    if return_result:
-        return cursor.fetchall()
+    init_airtrans_db(connection, cursor)
 
+    # место для запуска SQL запросов
+    with open('sql/test.sql') as sql_query_fin:
+        sql_query = sql_query_fin.read().strip()
+    query_result = run_query(cursor, sql_query)
 
-def run_query_from_file(path_to_file, connection):
-    with open(path_to_file, mode='r') as sql_script:
-        return execute_statement(connection, sql_script.read(), commit=True, return_result=True)
-
-
-# Подключаемся к MySql, сервер с базой нужно поднять отдельно
-# https://docs.oracle.com/en/java/java-components/advanced-management-console/2.20/install-guide/mysql-database-installation-and-configuration-advanced-management-console.html#GUID-12323233-07E3-45C2-B77A-F35B3BBA6592
-def connect_to_airtrans_db(host='localhost', user='root', password='password'):
-    connection = pymysql.connect(
-        host=host,
-        user=user,
-        password=password,
-        charset='utf8mb4',
-        cursorclass=DictCursor
-    )
-    execute_statement(connection, f"CREATE DATABASE IF NOT EXISTS {database_name}")
-    execute_statement(connection, f"USE {database_name}")
-    with open('sql/INIT_DB.sql', mode='r') as initial_sql_script:
-        sqlStatements = initial_sql_script.read().split(';')
-        for statement in sqlStatements:
-            execute_statement(connection, statement)
-        connection.commit()
-    return connection
-
-
-def release_resources(connection):
-    execute_statement(connection, f"DROP DATABASE {database_name}", commit=True)
-    connection.close()
-
-
-def run_queries():
-    connection = connect_to_airtrans_db()
-    try:
-        # место для запуска SQL запросов
-        result = run_query_from_file('sql/test.sql', connection)
-        for entry in result:
-            print(entry)
-    finally:
-        release_resources(connection)
+    print('Имена столбцов в SQL-запросе:')
+    print(*query_result['columns'], sep=',')
+    print()
+    print('Результат SQL-запроса:')
+    for row in query_result['rows']:
+        print(*row, sep=',')
 
 
 if __name__ == '__main__':
     try:
-        run_queries()
-    except pymysql.err.OperationalError as e:
+        test_query()
+    except Exception as e:
+        print('Возникла ошибка:')
         print(e)

@@ -11,7 +11,7 @@ CREATE TABLE airports
     airport_code CHAR(3)     NOT NULL,
     airport_name VARCHAR(50) NOT NULL,
     city         VARCHAR(30) NOT NULL,
-    coordinates  POINT       NOT NULL,
+    coordinates  POINT       NULL,
     timezone     TEXT        NOT NULL,
     PRIMARY KEY (airport_code)
 );
@@ -22,8 +22,7 @@ CREATE TABLE boarding_passes
     flight_id   INTEGER    NOT NULL,
     boarding_no INTEGER    NOT NULL,
     seat_no     VARCHAR(4) NOT NULL,
-    PRIMARY KEY (ticket_no, flight_id),
-    INDEX (flight_id, ticket_no)
+    PRIMARY KEY (ticket_no, flight_id)
 );
 
 CREATE TABLE bookings
@@ -47,9 +46,9 @@ CREATE TABLE flights
     actual_departure    TIMESTAMP NULL DEFAULT NULL,
     actual_arrival      TIMESTAMP NULL DEFAULT NULL,
     PRIMARY KEY (flight_id),
-    INDEX (departure_airport),
-    INDEX (arrival_airport),
-    INDEX (aircraft_code)
+    FOREIGN KEY (departure_airport) REFERENCES airports (airport_code),
+    FOREIGN KEY (arrival_airport) REFERENCES airports (airport_code),
+    FOREIGN KEY (aircraft_code) REFERENCES aircrafts (aircraft_code)
 );
 
 CREATE TABLE seats
@@ -57,8 +56,7 @@ CREATE TABLE seats
     aircraft_code   CHAR(3)     NOT NULL,
     seat_no         VARCHAR(4)  NOT NULL,
     fare_conditions VARCHAR(10) NOT NULL,
-    PRIMARY KEY (aircraft_code, seat_no),
-    INDEX (aircraft_code)
+    PRIMARY KEY (aircraft_code, seat_no)
 );
 
 CREATE TABLE ticket_flights
@@ -68,8 +66,7 @@ CREATE TABLE ticket_flights
     fare_conditions VARCHAR(10)    NOT NULL,
     amount          NUMERIC(10, 2) NOT NULL,
     PRIMARY KEY (ticket_no, flight_id),
-    INDEX (flight_id),
-    INDEX (ticket_no)
+    FOREIGN KEY (flight_id) REFERENCES flights (flight_id)
 );
 
 CREATE TABLE tickets
@@ -80,33 +77,10 @@ CREATE TABLE tickets
     passenger_name TEXT        NOT NULL,
     phone          VARCHAR(20) NULL,
     PRIMARY KEY (ticket_no),
-    INDEX (book_ref)
+    FOREIGN KEY (book_ref) REFERENCES bookings (book_ref)
 );
 
 
-ALTER TABLE tickets
-    ADD FOREIGN KEY (book_ref) REFERENCES bookings (book_ref) ON DELETE CASCADE;
-
-ALTER TABLE boarding_passes
-    ADD FOREIGN KEY (flight_id, ticket_no) REFERENCES ticket_flights (flight_id, ticket_no) ON DELETE CASCADE;
-
-ALTER TABLE seats
-    ADD FOREIGN KEY (aircraft_code) REFERENCES aircrafts (aircraft_code) ON DELETE CASCADE;
-
-ALTER TABLE flights
-    ADD FOREIGN KEY (departure_airport) REFERENCES airports (airport_code) ON DELETE CASCADE;
-
-ALTER TABLE flights
-    ADD FOREIGN KEY (arrival_airport) REFERENCES airports (airport_code) ON DELETE CASCADE;
-
-ALTER TABLE flights
-    ADD FOREIGN KEY (aircraft_code) REFERENCES aircrafts (aircraft_code) ON DELETE CASCADE;
-
-ALTER TABLE ticket_flights
-    ADD FOREIGN KEY (flight_id) REFERENCES flights (flight_id) ON DELETE CASCADE;
-
-ALTER TABLE ticket_flights
-    ADD FOREIGN KEY (ticket_no) REFERENCES tickets (ticket_no) ON DELETE CASCADE;INSERT INTO bookings VALUES ('00000F', '2017-07-05 03:12:00', '265700.00');
 INSERT INTO bookings VALUES ('000012', '2017-07-14 09:02:00', '37900.00');
 INSERT INTO bookings VALUES ('000068', '2017-08-15 14:27:00', '18100.00');
 INSERT INTO bookings VALUES ('000181', '2017-08-10 13:28:00', '131800.00');
@@ -186,110 +160,110 @@ INSERT INTO bookings VALUES ('001191', '2017-07-16 22:54:00', '66600.00');
 INSERT INTO bookings VALUES ('0011A9', '2017-07-31 02:22:00', '135400.00');
 INSERT INTO bookings VALUES ('001233', '2017-08-11 23:09:00', '47000.00');
 INSERT INTO bookings VALUES ('001269', '2017-07-06 02:07:00', '30000.00');
-INSERT INTO airports VALUES ('YKS', 'Yakutsk Airport', 'Yakutsk', ST_GeomFromText('POINT(129.77099609375 62.0932998657227)'), 'Asia/Yakutsk');
-INSERT INTO airports VALUES ('MJZ', 'Mirny Airport', 'Mirnyj', ST_GeomFromText('POINT(114.039001464844 62.5346984863281)'), 'Asia/Yakutsk');
-INSERT INTO airports VALUES ('KHV', 'Khabarovsk-Novy Airport', 'Khabarovsk', ST_GeomFromText('POINT(135.18800354004 48.52799987793)'), 'Asia/Vladivostok');
-INSERT INTO airports VALUES ('PKC', 'Yelizovo Airport', 'Petropavlovsk', ST_GeomFromText('POINT(158.453994750977 53.1679000854492)'), 'Asia/Kamchatka');
-INSERT INTO airports VALUES ('UUS', 'Yuzhno-Sakhalinsk Airport', 'Yuzhno-Sakhalinsk', ST_GeomFromText('POINT(142.718002319336 46.8886985778809)'), 'Asia/Sakhalin');
-INSERT INTO airports VALUES ('VVO', 'Vladivostok International Airport', 'Vladivostok', ST_GeomFromText('POINT(132.147994995117 43.398998260498)'), 'Asia/Vladivostok');
-INSERT INTO airports VALUES ('LED', 'Pulkovo Airport', 'St. Petersburg', ST_GeomFromText('POINT(30.2625007629395 59.8003005981445)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('KGD', 'Khrabrovo Airport', 'Kaliningrad', ST_GeomFromText('POINT(20.5925998687744 54.8899993896484)'), 'Europe/Kaliningrad');
-INSERT INTO airports VALUES ('KEJ', 'Kemerovo Airport', 'Kemorovo', ST_GeomFromText('POINT(86.1072006225586 55.2700996398926)'), 'Asia/Novokuznetsk');
-INSERT INTO airports VALUES ('CEK', 'Chelyabinsk Balandino Airport', 'Chelyabinsk', ST_GeomFromText('POINT(61.5033 55.305801)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('MQF', 'Magnitogorsk International Airport', 'Magnetiogorsk', ST_GeomFromText('POINT(58.7556991577148 53.3931007385254)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('PEE', 'Bolshoye Savino Airport', 'Perm', ST_GeomFromText('POINT(56.021198272705 57.914501190186)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('SGC', 'Surgut Airport', 'Surgut', ST_GeomFromText('POINT(73.4018020629883 61.3437004089355)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('BZK', 'Bryansk Airport', 'Bryansk', ST_GeomFromText('POINT(34.176399231 53.2141990662)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('MRV', 'Mineralnyye Vody Airport', 'Mineralnye Vody', ST_GeomFromText('POINT(43.081901550293 44.2251014709473)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('STW', 'Stavropol Shpakovskoye Airport', 'Stavropol', ST_GeomFromText('POINT(42.1128005981445 45.1091995239258)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('ASF', 'Astrakhan Airport', 'Astrakhan', ST_GeomFromText('POINT(48.0063018799 46.2832984924)'), 'Europe/Samara');
-INSERT INTO airports VALUES ('NJC', 'Nizhnevartovsk Airport', 'Nizhnevartovsk', ST_GeomFromText('POINT(76.4835968017578 60.9492988586426)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('SVX', 'Koltsovo Airport', 'Yekaterinburg', ST_GeomFromText('POINT(60.802700042725 56.743099212646)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('SVO', 'Sheremetyevo International Airport', 'Moscow', ST_GeomFromText('POINT(37.4146 55.972599)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('VOZ', 'Voronezh International Airport', 'Voronezh', ST_GeomFromText('POINT(39.2295989990234 51.8142013549805)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('VKO', 'Vnukovo International Airport', 'Moscow', ST_GeomFromText('POINT(37.2615013123 55.5914993286)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('SCW', 'Syktyvkar Airport', 'Syktyvkar', ST_GeomFromText('POINT(50.845100402832 61.6469993591309)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('KUF', 'Kurumoch International Airport', 'Samara', ST_GeomFromText('POINT(50.16429901123 53.504901885986)'), 'Europe/Samara');
-INSERT INTO airports VALUES ('DME', 'Domodedovo International Airport', 'Moscow', ST_GeomFromText('POINT(37.9062995910645 55.4087982177734)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('TJM', 'Roshchino International Airport', 'Tyumen', ST_GeomFromText('POINT(65.3243026733 57.1896018982)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('GOJ', 'Nizhny Novgorod Strigino International Airport', 'Nizhniy Novgorod', ST_GeomFromText('POINT(43.784000396729 56.230098724365)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('TOF', 'Bogashevo Airport', 'Tomsk', ST_GeomFromText('POINT(85.208297729492 56.380298614502)'), 'Asia/Krasnoyarsk');
-INSERT INTO airports VALUES ('UIK', 'Ust-Ilimsk Airport', 'Ust Ilimsk', ST_GeomFromText('POINT(102.565002441406 58.136100769043)'), 'Asia/Irkutsk');
-INSERT INTO airports VALUES ('NSK', 'Norilsk-Alykel Airport', 'Norilsk', ST_GeomFromText('POINT(87.3321990966797 69.3110961914062)'), 'Asia/Krasnoyarsk');
-INSERT INTO airports VALUES ('ARH', 'Talagi Airport', 'Arkhangelsk', ST_GeomFromText('POINT(40.7167015075684 64.6003036499023)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('RTW', 'Saratov Central Airport', 'Saratov', ST_GeomFromText('POINT(46.0466995239258 51.564998626709)'), 'Europe/Volgograd');
-INSERT INTO airports VALUES ('NUX', 'Novy Urengoy Airport', 'Novy Urengoy', ST_GeomFromText('POINT(76.5203018188477 66.0693969726562)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('NOJ', 'Noyabrsk Airport', 'Noyabrsk', ST_GeomFromText('POINT(75.2699966430664 63.1833000183105)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('UCT', 'Ukhta Airport', 'Ukhta', ST_GeomFromText('POINT(53.8046989440918 63.5668983459473)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('USK', 'Usinsk Airport', 'Usinsk', ST_GeomFromText('POINT(57.3671989440918 66.0046997070312)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('NNM', 'Naryan Mar Airport', 'Naryan-Mar', ST_GeomFromText('POINT(53.121898651123 67.6399993896484)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('PKV', 'Pskov Airport', 'Pskov', ST_GeomFromText('POINT(28.3955993652344 57.7839012145996)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('KGP', 'Kogalym International Airport', 'Kogalym', ST_GeomFromText('POINT(74.5337982177734 62.1903991699219)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('KJA', 'Yemelyanovo Airport', 'Krasnoyarsk', ST_GeomFromText('POINT(92.493301391602 56.172901153564)'), 'Asia/Krasnoyarsk');
-INSERT INTO airports VALUES ('URJ', 'Uray Airport', 'Uraj', ST_GeomFromText('POINT(64.8266983032227 60.1032981872559)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('IWA', 'Ivanovo South Airport', 'Ivanovo', ST_GeomFromText('POINT(40.9407997131348 56.9393997192383)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('PYJ', 'Polyarny Airport', 'Yakutia', ST_GeomFromText('POINT(112.029998779 66.4003982544)'), 'Asia/Yakutsk');
-INSERT INTO airports VALUES ('KXK', 'Komsomolsk-on-Amur Airport', 'Komsomolsk-on-Amur', ST_GeomFromText('POINT(136.934005737305 50.4090003967285)'), 'Asia/Vladivostok');
-INSERT INTO airports VALUES ('DYR', 'Ugolny Airport', 'Anadyr', ST_GeomFromText('POINT(177.740997314453 64.7349014282227)'), 'Asia/Anadyr');
-INSERT INTO airports VALUES ('PES', 'Petrozavodsk Airport', 'Petrozavodsk', ST_GeomFromText('POINT(34.1547012329102 61.8852005004883)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('KYZ', 'Kyzyl Airport', 'Kyzyl', ST_GeomFromText('POINT(94.4005966186523 51.6693992614746)'), 'Asia/Krasnoyarsk');
-INSERT INTO airports VALUES ('NOZ', 'Spichenkovo Airport', 'Novokuznetsk', ST_GeomFromText('POINT(86.877197265625 53.8114013671875)'), 'Asia/Novokuznetsk');
-INSERT INTO airports VALUES ('GRV', 'Khankala Air Base', 'Grozny', ST_GeomFromText('POINT(45.7840995788574 43.2980995178223)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('NAL', 'Nalchik Airport', 'Nalchik', ST_GeomFromText('POINT(43.6366004943848 43.5129013061523)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('OGZ', 'Beslan Airport', 'Beslan', ST_GeomFromText('POINT(44.6066017151 43.2051010132)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('ESL', 'Elista Airport', 'Elista', ST_GeomFromText('POINT(44.3308982849121 46.3739013671875)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('SLY', 'Salekhard Airport', 'Salekhard', ST_GeomFromText('POINT(66.6110000610352 66.5907974243164)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('HMA', 'Khanty Mansiysk Airport', 'Khanty-Mansiysk', ST_GeomFromText('POINT(69.0860977172852 61.0284996032715)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('NYA', 'Nyagan Airport', 'Nyagan', ST_GeomFromText('POINT(65.6149978637695 62.1100006103516)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('OVS', 'Sovetskiy Airport', 'Sovetskiy', ST_GeomFromText('POINT(63.6019134521484 61.3266220092773)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('IJK', 'Izhevsk Airport', 'Izhevsk', ST_GeomFromText('POINT(53.4575004577637 56.8280982971191)'), 'Europe/Samara');
-INSERT INTO airports VALUES ('KVX', 'Pobedilovo Airport', 'Kirov', ST_GeomFromText('POINT(49.348300933838 58.503299713135)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('NYM', 'Nadym Airport', 'Nadym', ST_GeomFromText('POINT(72.6988983154297 65.4809036254883)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('NFG', 'Nefteyugansk Airport', 'Nefteyugansk', ST_GeomFromText('POINT(72.6500015258789 61.1082992553711)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('KRO', 'Kurgan Airport', 'Kurgan', ST_GeomFromText('POINT(65.4156036376953 55.4752998352051)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('EGO', 'Belgorod International Airport', 'Belgorod', ST_GeomFromText('POINT(36.5900993347168 50.643798828125)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('URS', 'Kursk East Airport', 'Kursk', ST_GeomFromText('POINT(36.2956008911133 51.7505989074707)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('LPK', 'Lipetsk Airport', 'Lipetsk', ST_GeomFromText('POINT(39.5377998352051 52.7028007507324)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('VKT', 'Vorkuta Airport', 'Vorkuta', ST_GeomFromText('POINT(63.9930992126465 67.4886016845703)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('UUA', 'Bugulma Airport', 'Bugulma', ST_GeomFromText('POINT(52.801700592041 54.6399993896484)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('JOK', 'Yoshkar-Ola Airport', 'Yoshkar-Ola', ST_GeomFromText('POINT(47.9047012329102 56.7005996704102)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('CSY', 'Cheboksary Airport', 'Cheboksary', ST_GeomFromText('POINT(47.3473014831543 56.0903015136719)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('ULY', 'Ulyanovsk East Airport', 'Ulyanovsk', ST_GeomFromText('POINT(48.8027000427246 54.4010009765625)'), 'Europe/Samara');
-INSERT INTO airports VALUES ('OSW', 'Orsk Airport', 'Orsk', ST_GeomFromText('POINT(58.5956001281738 51.0724983215332)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('PEZ', 'Penza Airport', 'Penza', ST_GeomFromText('POINT(45.0210990905762 53.1105995178223)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('SKX', 'Saransk Airport', 'Saransk', ST_GeomFromText('POINT(45.2122573852539 54.125129699707)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('TBW', 'Donskoye Airport', 'Tambow', ST_GeomFromText('POINT(41.482799530029 52.806098937988)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('UKX', 'Ust-Kut Airport', 'Ust-Kut', ST_GeomFromText('POINT(105.730003356934 56.8567008972168)'), 'Asia/Irkutsk');
-INSERT INTO airports VALUES ('GDZ', 'Gelendzhik Airport', 'Gelendzhik', ST_GeomFromText('POINT(38.0124807358 44.5820926295)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('IAR', 'Tunoshna Airport', 'Yaroslavl', ST_GeomFromText('POINT(40.157398223877 57.5606994628906)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('NBC', 'Begishevo Airport', 'Nizhnekamsk', ST_GeomFromText('POINT(52.0924987792969 55.5647010803223)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('ULV', 'Ulyanovsk Baratayevka Airport', 'Ulyanovsk', ST_GeomFromText('POINT(48.2266998291 54.2682991028)'), 'Europe/Samara');
-INSERT INTO airports VALUES ('SWT', 'Strezhevoy Airport', 'Strezhevoy', ST_GeomFromText('POINT(77.6600036621 60.709400177)'), 'Asia/Krasnoyarsk');
-INSERT INTO airports VALUES ('EYK', 'Beloyarskiy Airport', 'Beloyarsky', ST_GeomFromText('POINT(66.698600769 63.6869010925)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('KLF', 'Grabtsevo Airport', 'Kaluga', ST_GeomFromText('POINT(36.3666687012 54.5499992371)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('RGK', 'Gorno-Altaysk Airport', 'Gorno-Altaysk', ST_GeomFromText('POINT(85.8332977295 51.9667015076)'), 'Asia/Krasnoyarsk');
-INSERT INTO airports VALUES ('KRR', 'Krasnodar Pashkovsky International Airport', 'Krasnodar', ST_GeomFromText('POINT(39.170501708984 45.034698486328)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('MCX', 'Uytash Airport', 'Makhachkala', ST_GeomFromText('POINT(47.6523017883301 42.8167991638184)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('KZN', 'Kazan International Airport', 'Kazan', ST_GeomFromText('POINT(49.278701782227 55.606201171875)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('REN', 'Orenburg Central Airport', 'Orenburg', ST_GeomFromText('POINT(55.4566993713379 51.7957992553711)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('UFA', 'Ufa International Airport', 'Ufa', ST_GeomFromText('POINT(55.874401092529 54.557498931885)'), 'Asia/Yekaterinburg');
-INSERT INTO airports VALUES ('OVB', 'Tolmachevo Airport', 'Novosibirsk', ST_GeomFromText('POINT(82.650703430176 55.012599945068)'), 'Asia/Novosibirsk');
-INSERT INTO airports VALUES ('CEE', 'Cherepovets Airport', 'Cherepovets', ST_GeomFromText('POINT(38.0158004761 59.273601532)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('OMS', 'Omsk Central Airport', 'Omsk', ST_GeomFromText('POINT(73.3105010986328 54.9669990539551)'), 'Asia/Omsk');
-INSERT INTO airports VALUES ('ROV', 'Rostov-on-Don Airport', 'Rostov', ST_GeomFromText('POINT(39.8180999756 47.2582015991)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('AER', 'Sochi International Airport', 'Sochi', ST_GeomFromText('POINT(39.956600189209 43.449901580811)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('VOG', 'Volgograd International Airport', 'Volgograd', ST_GeomFromText('POINT(44.3455009460449 48.7825012207031)'), 'Europe/Volgograd');
-INSERT INTO airports VALUES ('BQS', 'Ignatyevo Airport', 'Blagoveschensk', ST_GeomFromText('POINT(127.412002563477 50.4253997802734)'), 'Asia/Yakutsk');
-INSERT INTO airports VALUES ('GDX', 'Sokol Airport', 'Magadan', ST_GeomFromText('POINT(150.720001220703 59.9109992980957)'), 'Asia/Magadan');
-INSERT INTO airports VALUES ('HTA', 'Chita-Kadala Airport', 'Chita', ST_GeomFromText('POINT(113.306 52.026299)'), 'Asia/Chita');
-INSERT INTO airports VALUES ('BTK', 'Bratsk Airport', 'Bratsk', ST_GeomFromText('POINT(101.697998046875 56.3706016540527)'), 'Asia/Irkutsk');
-INSERT INTO airports VALUES ('IKT', 'Irkutsk Airport', 'Irkutsk', ST_GeomFromText('POINT(104.38899993896 52.268001556396)'), 'Asia/Irkutsk');
-INSERT INTO airports VALUES ('UUD', 'Ulan-Ude Airport (Mukhino)', 'Ulan-ude', ST_GeomFromText('POINT(107.438003540039 51.8078002929688)'), 'Asia/Irkutsk');
-INSERT INTO airports VALUES ('MMK', 'Murmansk Airport', 'Murmansk', ST_GeomFromText('POINT(32.7508010864258 68.7817001342773)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('ABA', 'Abakan Airport', 'Abakan', ST_GeomFromText('POINT(91.3850021362305 53.7400016784668)'), 'Asia/Krasnoyarsk');
-INSERT INTO airports VALUES ('BAX', 'Barnaul Airport', 'Barnaul', ST_GeomFromText('POINT(83.5384979248047 53.3638000488281)'), 'Asia/Krasnoyarsk');
-INSERT INTO airports VALUES ('AAQ', 'Anapa Vityazevo Airport', 'Anapa', ST_GeomFromText('POINT(37.347301483154 45.002101898193)'), 'Europe/Moscow');
-INSERT INTO airports VALUES ('CNN', 'Chulman Airport', 'Neryungri', ST_GeomFromText('POINT(124.91400146484 56.913898468018)'), 'Asia/Yakutsk');
+INSERT INTO airports VALUES ('YKS', 'Yakutsk Airport', 'Yakutsk', NULL, 'Asia/Yakutsk');
+INSERT INTO airports VALUES ('MJZ', 'Mirny Airport', 'Mirnyj', NULL, 'Asia/Yakutsk');
+INSERT INTO airports VALUES ('KHV', 'Khabarovsk-Novy Airport', 'Khabarovsk', NULL, 'Asia/Vladivostok');
+INSERT INTO airports VALUES ('PKC', 'Yelizovo Airport', 'Petropavlovsk', NULL, 'Asia/Kamchatka');
+INSERT INTO airports VALUES ('UUS', 'Yuzhno-Sakhalinsk Airport', 'Yuzhno-Sakhalinsk', NULL, 'Asia/Sakhalin');
+INSERT INTO airports VALUES ('VVO', 'Vladivostok International Airport', 'Vladivostok', NULL, 'Asia/Vladivostok');
+INSERT INTO airports VALUES ('LED', 'Pulkovo Airport', 'St. Petersburg', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('KGD', 'Khrabrovo Airport', 'Kaliningrad', NULL, 'Europe/Kaliningrad');
+INSERT INTO airports VALUES ('KEJ', 'Kemerovo Airport', 'Kemorovo', NULL, 'Asia/Novokuznetsk');
+INSERT INTO airports VALUES ('CEK', 'Chelyabinsk Balandino Airport', 'Chelyabinsk', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('MQF', 'Magnitogorsk International Airport', 'Magnetiogorsk', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('PEE', 'Bolshoye Savino Airport', 'Perm', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('SGC', 'Surgut Airport', 'Surgut', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('BZK', 'Bryansk Airport', 'Bryansk', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('MRV', 'Mineralnyye Vody Airport', 'Mineralnye Vody', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('STW', 'Stavropol Shpakovskoye Airport', 'Stavropol', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('ASF', 'Astrakhan Airport', 'Astrakhan', NULL, 'Europe/Samara');
+INSERT INTO airports VALUES ('NJC', 'Nizhnevartovsk Airport', 'Nizhnevartovsk', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('SVX', 'Koltsovo Airport', 'Yekaterinburg', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('SVO', 'Sheremetyevo International Airport', 'Moscow', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('VOZ', 'Voronezh International Airport', 'Voronezh', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('VKO', 'Vnukovo International Airport', 'Moscow', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('SCW', 'Syktyvkar Airport', 'Syktyvkar', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('KUF', 'Kurumoch International Airport', 'Samara', NULL, 'Europe/Samara');
+INSERT INTO airports VALUES ('DME', 'Domodedovo International Airport', 'Moscow', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('TJM', 'Roshchino International Airport', 'Tyumen', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('GOJ', 'Nizhny Novgorod Strigino International Airport', 'Nizhniy Novgorod', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('TOF', 'Bogashevo Airport', 'Tomsk', NULL, 'Asia/Krasnoyarsk');
+INSERT INTO airports VALUES ('UIK', 'Ust-Ilimsk Airport', 'Ust Ilimsk', NULL, 'Asia/Irkutsk');
+INSERT INTO airports VALUES ('NSK', 'Norilsk-Alykel Airport', 'Norilsk', NULL, 'Asia/Krasnoyarsk');
+INSERT INTO airports VALUES ('ARH', 'Talagi Airport', 'Arkhangelsk', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('RTW', 'Saratov Central Airport', 'Saratov', NULL, 'Europe/Volgograd');
+INSERT INTO airports VALUES ('NUX', 'Novy Urengoy Airport', 'Novy Urengoy', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('NOJ', 'Noyabrsk Airport', 'Noyabrsk', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('UCT', 'Ukhta Airport', 'Ukhta', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('USK', 'Usinsk Airport', 'Usinsk', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('NNM', 'Naryan Mar Airport', 'Naryan-Mar', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('PKV', 'Pskov Airport', 'Pskov', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('KGP', 'Kogalym International Airport', 'Kogalym', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('KJA', 'Yemelyanovo Airport', 'Krasnoyarsk', NULL, 'Asia/Krasnoyarsk');
+INSERT INTO airports VALUES ('URJ', 'Uray Airport', 'Uraj', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('IWA', 'Ivanovo South Airport', 'Ivanovo', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('PYJ', 'Polyarny Airport', 'Yakutia', NULL, 'Asia/Yakutsk');
+INSERT INTO airports VALUES ('KXK', 'Komsomolsk-on-Amur Airport', 'Komsomolsk-on-Amur', NULL, 'Asia/Vladivostok');
+INSERT INTO airports VALUES ('DYR', 'Ugolny Airport', 'Anadyr', NULL, 'Asia/Anadyr');
+INSERT INTO airports VALUES ('PES', 'Petrozavodsk Airport', 'Petrozavodsk', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('KYZ', 'Kyzyl Airport', 'Kyzyl', NULL, 'Asia/Krasnoyarsk');
+INSERT INTO airports VALUES ('NOZ', 'Spichenkovo Airport', 'Novokuznetsk', NULL, 'Asia/Novokuznetsk');
+INSERT INTO airports VALUES ('GRV', 'Khankala Air Base', 'Grozny', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('NAL', 'Nalchik Airport', 'Nalchik', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('OGZ', 'Beslan Airport', 'Beslan', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('ESL', 'Elista Airport', 'Elista', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('SLY', 'Salekhard Airport', 'Salekhard', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('HMA', 'Khanty Mansiysk Airport', 'Khanty-Mansiysk', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('NYA', 'Nyagan Airport', 'Nyagan', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('OVS', 'Sovetskiy Airport', 'Sovetskiy', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('IJK', 'Izhevsk Airport', 'Izhevsk', NULL, 'Europe/Samara');
+INSERT INTO airports VALUES ('KVX', 'Pobedilovo Airport', 'Kirov', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('NYM', 'Nadym Airport', 'Nadym', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('NFG', 'Nefteyugansk Airport', 'Nefteyugansk', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('KRO', 'Kurgan Airport', 'Kurgan', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('EGO', 'Belgorod International Airport', 'Belgorod', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('URS', 'Kursk East Airport', 'Kursk', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('LPK', 'Lipetsk Airport', 'Lipetsk', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('VKT', 'Vorkuta Airport', 'Vorkuta', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('UUA', 'Bugulma Airport', 'Bugulma', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('JOK', 'Yoshkar-Ola Airport', 'Yoshkar-Ola', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('CSY', 'Cheboksary Airport', 'Cheboksary', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('ULY', 'Ulyanovsk East Airport', 'Ulyanovsk', NULL, 'Europe/Samara');
+INSERT INTO airports VALUES ('OSW', 'Orsk Airport', 'Orsk', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('PEZ', 'Penza Airport', 'Penza', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('SKX', 'Saransk Airport', 'Saransk', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('TBW', 'Donskoye Airport', 'Tambow', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('UKX', 'Ust-Kut Airport', 'Ust-Kut', NULL, 'Asia/Irkutsk');
+INSERT INTO airports VALUES ('GDZ', 'Gelendzhik Airport', 'Gelendzhik', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('IAR', 'Tunoshna Airport', 'Yaroslavl', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('NBC', 'Begishevo Airport', 'Nizhnekamsk', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('ULV', 'Ulyanovsk Baratayevka Airport', 'Ulyanovsk', NULL, 'Europe/Samara');
+INSERT INTO airports VALUES ('SWT', 'Strezhevoy Airport', 'Strezhevoy', NULL, 'Asia/Krasnoyarsk');
+INSERT INTO airports VALUES ('EYK', 'Beloyarskiy Airport', 'Beloyarsky', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('KLF', 'Grabtsevo Airport', 'Kaluga', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('RGK', 'Gorno-Altaysk Airport', 'Gorno-Altaysk', NULL, 'Asia/Krasnoyarsk');
+INSERT INTO airports VALUES ('KRR', 'Krasnodar Pashkovsky International Airport', 'Krasnodar', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('MCX', 'Uytash Airport', 'Makhachkala', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('KZN', 'Kazan International Airport', 'Kazan', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('REN', 'Orenburg Central Airport', 'Orenburg', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('UFA', 'Ufa International Airport', 'Ufa', NULL, 'Asia/Yekaterinburg');
+INSERT INTO airports VALUES ('OVB', 'Tolmachevo Airport', 'Novosibirsk', NULL, 'Asia/Novosibirsk');
+INSERT INTO airports VALUES ('CEE', 'Cherepovets Airport', 'Cherepovets', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('OMS', 'Omsk Central Airport', 'Omsk', NULL, 'Asia/Omsk');
+INSERT INTO airports VALUES ('ROV', 'Rostov-on-Don Airport', 'Rostov', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('AER', 'Sochi International Airport', 'Sochi', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('VOG', 'Volgograd International Airport', 'Volgograd', NULL, 'Europe/Volgograd');
+INSERT INTO airports VALUES ('BQS', 'Ignatyevo Airport', 'Blagoveschensk', NULL, 'Asia/Yakutsk');
+INSERT INTO airports VALUES ('GDX', 'Sokol Airport', 'Magadan', NULL, 'Asia/Magadan');
+INSERT INTO airports VALUES ('HTA', 'Chita-Kadala Airport', 'Chita', NULL, 'Asia/Chita');
+INSERT INTO airports VALUES ('BTK', 'Bratsk Airport', 'Bratsk', NULL, 'Asia/Irkutsk');
+INSERT INTO airports VALUES ('IKT', 'Irkutsk Airport', 'Irkutsk', NULL, 'Asia/Irkutsk');
+INSERT INTO airports VALUES ('UUD', 'Ulan-Ude Airport (Mukhino)', 'Ulan-ude', NULL, 'Asia/Irkutsk');
+INSERT INTO airports VALUES ('MMK', 'Murmansk Airport', 'Murmansk', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('ABA', 'Abakan Airport', 'Abakan', NULL, 'Asia/Krasnoyarsk');
+INSERT INTO airports VALUES ('BAX', 'Barnaul Airport', 'Barnaul', NULL, 'Asia/Krasnoyarsk');
+INSERT INTO airports VALUES ('AAQ', 'Anapa Vityazevo Airport', 'Anapa', NULL, 'Europe/Moscow');
+INSERT INTO airports VALUES ('CNN', 'Chulman Airport', 'Neryungri', NULL, 'Asia/Yakutsk');
 INSERT INTO aircrafts VALUES ('773', 'Boeing 777-300', '11100');
 INSERT INTO aircrafts VALUES ('763', 'Boeing 767-300', '7900');
 INSERT INTO aircrafts VALUES ('SU9', 'Sukhoi Superjet-100', '3000');
